@@ -14,12 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Mapping {
 
-  private String rootElement;
-
-  private String extractValue;
-
-  private String specJsonString;
-
   private InputStream specJsonStream;
 
   private List<TransformerData> transformerData;

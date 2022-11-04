@@ -16,40 +16,13 @@ import com.sixsprints.json.util.TransformerUtil;
 
 public class MappingService {
 
-  private static final String ROOT_MAPPING = "[" +
-    "  {" +
-    "    \"operation\": \"shift\"," +
-    "    \"spec\": {" +
-    "      \"{{ROOT_ELEMENT}}\": {" +
-    "        \"*\": \"&\"" +
-    "      }" +
-    "    }" +
-    "  }" +
-    "]";
-
-  private static final String EXTRACT_VALUE = "[" +
-    "  {" +
-    "    \"operation\": \"shift\"," +
-    "    \"spec\": {" +
-    "      \"{{EXTRACT_VALUE}}\": \"\"" +
-    "    }" +
-    "  }" +
-    "]";
-
   @SuppressWarnings("unchecked")
   public static TransformerResponse convert(Mapping mapping, String inputMessage) {
-
-    Object spec = generateSpec(mapping);
-    List<TransformerMetaInfo> metaChanges = new ArrayList<TransformerMetaInfo>();
-
+    Object spec = JsonUtils.jsonToObject(mapping.getSpecJsonStream());
     Map<String, Object> input = JsonUtils.jsonToMap(inputMessage);
     Chainr chainr = Chainr.fromSpec(spec);
-
-    if (!isBlank(mapping.getExtractValue())) {
-      return TransformerResponse.builder().output(chainr.transform(input)).transformerMetaInfo(metaChanges).build();
-    }
-
     Map<String, Object> output = (Map<String, Object>) chainr.transform(input);
+    List<TransformerMetaInfo> metaChanges = new ArrayList<TransformerMetaInfo>();
     if (mapping.getTransformerData() != null && !mapping.getTransformerData().isEmpty()) {
       for (TransformerData transformerData : mapping.getTransformerData()) {
         SpecTransformer transformer = SpecFactory.getInstance(transformerData.getSpecTransformerKey());
@@ -60,29 +33,6 @@ public class MappingService {
       }
     }
     return TransformerResponse.builder().output(output).transformerMetaInfo(metaChanges).build();
-  }
-
-  private static Object generateSpec(Mapping mapping) {
-
-    if (!isBlank(mapping.getRootElement())) {
-      return JsonUtils.jsonToObject(ROOT_MAPPING.replace("{{ROOT_ELEMENT}}", mapping.getRootElement()));
-    }
-
-    if (!isBlank(mapping.getExtractValue())) {
-      return JsonUtils.jsonToObject(EXTRACT_VALUE.replace("{{EXTRACT_VALUE}}", mapping.getExtractValue()));
-    }
-
-    if (!isBlank(mapping.getSpecJsonString())) {
-      return JsonUtils.jsonToObject(mapping.getSpecJsonString());
-    }
-
-    return JsonUtils.jsonToObject(mapping.getSpecJsonStream());
-  }
-
-  private static boolean isBlank(String string) {
-
-    return string == null || string.isEmpty();
-
   }
 
 }
